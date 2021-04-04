@@ -9,8 +9,14 @@ describe('PostsLambda func', () => {
     expect(JSON.parse(body).length).toBe(3);
   });
 
-  it('should get an unauthorized response', async () => {
+  it('should get a forbidden response', async () => {
     const req = ({ headers: { Authorization: 'abc' } } as unknown) as APIGatewayProxyEvent;
+    const { statusCode } = await lambdaFunc(req);
+    expect(statusCode).toBe(403);
+  });
+
+  it('should get an unauthorized response', async () => {
+    const req = ({ headers: {} } as unknown) as APIGatewayProxyEvent;
     const { statusCode } = await lambdaFunc(req);
     expect(statusCode).toBe(401);
   });

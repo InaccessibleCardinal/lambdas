@@ -1,17 +1,7 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
 
-export function makeErrorResponse(
-  statusCode: number,
-  message?: string,
-  err?: Error
-): APIGatewayProxyResult {
-  if (message) {
-    return { statusCode, body: message };
-  } else if (err) {
-    return { statusCode, body: err.message };
-  } else {
-    return { statusCode, body: 'Something went wrong. You mad.' };
-  }
+export function makeErrorResponse(statusCode: number, err: Error): APIGatewayProxyResult {
+  return { statusCode, body: JSON.stringify({ error: err.message }) };
 }
 
 export function makeSuccessResponse(

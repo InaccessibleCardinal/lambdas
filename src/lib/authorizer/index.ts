@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import Lambda from '../../types/Lambda';
 import { makeErrorResponse } from '../responses';
+import { Result } from '../../types/Result';
 
 export default function authorize(
   target: Lambda,
@@ -11,21 +12,39 @@ export default function authorize(
 
   descriptor.value = async function (event: APIGatewayProxyEvent) {
     const { headers } = event;
-    const isAuthorized = await checkIsAuthorized(headers);
-    if (!isAuthorized) {
-      return makeErrorResponse(401);
+    const { type, value } = await checkIsAuthorized(headers);
+    if (type === 'error') {
+      if (value.message === 'Unauthorized') {
+        return makeErrorResponse(401, value as Error);
+      } else {
+        return makeErrorResponse(403, value as Error);
+      }
     }
     return originalLambda(event);
   };
 }
 
-async function checkIsAuthorized(headers: any): Promise<boolean> {
+type AuthType = {
+  statusCode: number;
+  token: string;
+  message: string;
+};
+
+async function checkIsAuthorized(headers: any): Promise<Result<AuthType>> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (headers.Authorization === 'abc123') {
-        resolve(true);
+      const { Authorization } = headers;
+      if (!Authorization) {
+        resolve({ type: 'error', value: new Error('Unauthorized') });
       } else {
-        resolve(false);
+        if (Authorization !== 'abc123') {
+          resolve({ type: 'error', value: new Error('Forbidden') });
+        } else {
+          resolve({
+            type: 'success',
+            value: { statusCode: 200, token: 'goodtoken', message: 'auth success' },
+          });
+        }
       }
     }, 500);
   });

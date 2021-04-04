@@ -13,7 +13,7 @@ class PostsLambda implements Lambda {
       const posts = await getPosts();
       return makeSuccessResponse(200, posts);
     } catch (err) {
-      return makeErrorResponse(500, 'Something wrong with posts api.');
+      return makeErrorResponse(500, new Error('Internal server error.'));
     }
   }
 }
